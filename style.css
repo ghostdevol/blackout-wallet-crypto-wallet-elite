@@ -1,121 +1,27 @@
-/* ===== Body & Base ===== */
 body {
     font-family: 'Inter', sans-serif;
-    background: radial-gradient(circle at top left, #0f0f1a 0%, #050a14 100%);
-    color: #f0f0f0;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
 }
-
-/* ===== Header ===== */
-header {
-    background: linear-gradient(90deg, #ff00ff, #00ffff);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
-}
-header h1 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #000;
-}
-
-/* ===== Buttons ===== */
-.wallet-btn, #connect-btn {
-    background: linear-gradient(90deg, #00ffff, #ff00ff);
-    color: #000;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    border: none;
-    box-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.wallet-btn:hover, #connect-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff;
-}
-
-/* ===== Wallet Cards ===== */
 .wallet-card {
-    background: rgba(10,10,20,0.8);
-    border: 1px solid #00ffff;
-    border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff, 0 0 60px #ff00ff;
     transition: all 0.3s ease;
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
 }
 .wallet-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 0 30px #00ffff, 0 0 60px #ff00ff, 0 0 90px #ff00ff;
+    box-shadow: 0 20px 25px rgba(0,0,0,0.2);
 }
-
-/* ===== NFT Grid & Cards ===== */
 .nft-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+    gap: 0.5rem;
 }
 .nft-card {
-    background: rgba(5,5,15,0.9);
-    border: 2px solid #ff00ff;
-    border-radius: 12px;
+    background: #111;
+    border-radius: 8px;
     overflow: hidden;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px #ff00ff, 0 0 30px #00ffff;
 }
 .nft-card img {
     width: 100%;
-    border-bottom: 1px solid #00ffff;
-}
-.nft-card:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 0 30px #ff00ff, 0 0 60px #00ffff;
-}
-
-/* ===== Inputs & Selects ===== */
-input, select {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    border: none;
-    outline: none;
-    color: #000;
-    background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
-    box-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff;
-    transition: all 0.2s ease;
-}
-input:focus, select:focus {
-    transform: scale(1.02);
-    box-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff;
-}
-
-/* ===== Token Swap Section ===== */
-#swap-btn {
-    width: 100%;
-    margin-top: 0.5rem;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-    .nft-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
-    }
-    header h1 {
-        font-size: 1.2rem;
-    }
-}
-
-/* ===== Minor Neon Touches ===== */
-h2 {
-    color: #00ffff;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #ff00ff;
-}
-p, label {
-    color: #f0f0f0;
+    height: auto;
 }
