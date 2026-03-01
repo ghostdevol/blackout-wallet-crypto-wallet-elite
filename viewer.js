@@ -1,59 +1,70 @@
-// ====== Wallet Connection ======
+// ===== Neon Blackout Wallet Prototype =====
 let provider;
 let signer;
-let userAddress;
 
-const connectBtn = document.getElementById("connect-btn");
-connectBtn.onclick = async () => {
-    if(window.ethereum){
+const connectBtn = document.getElementById('connect-btn');
+const generateBtn = document.getElementById('generate-btn');
+const walletAddress = document.getElementById('wallet-address');
+const walletBalance = document.getElementById('wallet-balance');
+const walletNetwork = document.getElementById('wallet-network');
+const nftGrid = document.getElementById('nft-grid');
+const swapBtn = document.getElementById('swap-btn');
+
+// ===== Connect MetaMask Wallet =====
+async function connectWallet() {
+    if (window.ethereum) {
         provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
-        userAddress = await signer.getAddress();
-        connectBtn.innerText = "Connected";
-        document.getElementById("wallet-address").innerText = userAddress;
-        loadBalance();
-        loadNFTs();
+        const address = await signer.getAddress();
+        walletAddress.textContent = address;
+        const balance = await provider.getBalance(address);
+        walletBalance.textContent = ethers.utils.formatEther(balance) + ' ETH';
+        const network = await provider.getNetwork();
+        walletNetwork.textContent = network.name;
+        loadNFTs(address);
     } else {
-        alert("Install MetaMask!");
+        alert("Install MetaMask or another wallet extension!");
     }
 }
 
-async function loadBalance(){
-    if(!provider || !userAddress) return;
-    const balance = await provider.getBalance(userAddress);
-    document.getElementById("wallet-balance").innerText = "Balance: " + ethers.utils.formatEther(balance) + " ETH";
-}
+connectBtn.addEventListener('click', connectWallet);
 
-// ====== NFT Viewer ======
-const nftContainerSelector = "#nft-container";
-const nftContractAddress = "0xYourNFTContractAddress";
-const nftABI = [
-    "function balanceOf(address owner) view returns (uint256)",
-    "function tokenOfOwnerByIndex(address owner, uint index) view returns (uint256)"
-];
-let nftContract = null;
+// ===== Generate New Wallet via BIP-39 =====
+generateBtn.addEventListener('click', async () => {
+    const mnemonic = bip39.generateMnemonic();
+    const seed = bip39.mnemonicToSeedSync(mnemonic);
+    const hdwallet = ethereumjs.Wallet.fromMasterSeed(seed);
+    const wallet = hdwallet.getWallet();
+    const address = '0x' + wallet.getAddress().toString('hex');
 
-async function loadNFTs(){
-    const container = document.querySelector(nftContainerSelector);
-    if(!container || !userAddress) return;
-    container.innerHTML = "";
-    nftContract = new ethers.Contract(nftContractAddress, nftABI, provider);
-    const balance = await nftContract.balanceOf(userAddress);
-    for(let i=0;i<balance;i++){
-        const tokenId = await nftContract.tokenOfOwnerByIndex(userAddress, i);
-        const card = document.createElement("div");
-        card.className = "nft-card";
-        card.innerHTML = `<img src="assets/placeholder-nft.png" alt="NFT #${tokenId}"><h3>#${tokenId}</h3>`;
-        container.appendChild(card);
+    walletAddress.textContent = address;
+    walletBalance.textContent = '0 ETH';
+    walletNetwork.textContent = 'Custom';
+
+    alert(`Mnemonic Generated! Save it safely:\n\n${mnemonic}`);
+});
+
+// ===== Load NFT Grid (Placeholder) =====
+function loadNFTs(address) {
+    nftGrid.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+        const card = document.createElement('div');
+        card.classList.add('nft-card');
+        card.innerHTML = `
+            <img src="https://via.placeholder.com/180?text=NFT+${i}" alt="NFT ${i}">
+            <p>NFT #${i}</p>
+        `;
+        nftGrid.appendChild(card);
     }
 }
 
-// ====== Token Swap Simulation ======
-document.getElementById("swap-btn").onclick = () => {
-    const amount = parseFloat(document.getElementById("swap-amount").value);
-    const from = document.getElementById("swap-from").value;
-    const to = document.getElementById("swap-to").value;
-    if(!amount || from === to) return alert("Invalid swap");
-    alert(`Swapped ${amount} ${from} → ${to} (simulated)`);
-};
+// ===== Send / Swap Placeholder =====
+swapBtn.addEventListener('click', async () => {
+    const recipient = document.getElementById('recipient').value;
+    const amount = document.getElementById('amount').value;
+    const token = document.getElementById('token-select').value;
+    if (!signer) return alert("Connect wallet first!");
+    if (!recipient || !amount) return alert("Fill recipient and amount!");
+    alert(`Sending ${amount} ${token} to ${recipient} (simulation)`);
+});
