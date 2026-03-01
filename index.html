@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackout-Wallet | Elite Cryptocurrency Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bip39@3.0.4/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethereumjs-wallet@1.0.2/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethereumjs-wallet@1.0.2/hdkey.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.1/dist/web3.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .dark .gradient-bg {
+            background: linear-gradient(135deg, #0f0f1a 0%, #0a1122 50%, #050a14 100%);
+        }
+        .elite-gold {
+            background: linear-gradient(135deg, #f5d742 0%, #d4af37 50%, #996515 100%);
+        }
+        .theme-switch {
+            transition: all 0.3s ease;
+        }
+        .wallet-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .wallet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .chatbot-message {
+            max-width: 80%;
+        }
+        .security-pin-input {
+            letter-spacing: 0.5em;
+            font-size: 1.5rem;
+        }
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .nft-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+        .token-selector::-webkit-scrollbar {
+            width: 6px;
+        }
+        .token-selector::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .token-selector::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        .dark .token-selector::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        .dark .token-selector::-webkit-scrollbar-thumb {
+            background: #4a5568;
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg text-gray-100 transition-colors duration-300">
+    <!-- Security PIN Modal -->
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center mb-6">Enter Security PIN</h2>
+            <div class="flex justify-center mb-6">
+                <input type="password" id="pinInput" maxlength="6" class="security-pin-input bg-transparent border-b-2 border-gray-600 text-center outline-none focus:border-blue-500" autocomplete="off">
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="1">1</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="2">2</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="3">3</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="4">4</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="5">5</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="6">6</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="7">7</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="8">8</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="9">9</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium" data-value="0">0</button>
+                <button class="pin-btn bg-gray-700 hover:bg-gray-600 rounded-lg py-4 text-xl font-medium col-span-2" id="pinBackspace">
+                    <i class="fas fa-backspace"></i>
+                </button>
+            </div>
+            <div class="flex justify-between">
+                <button id="skipPinBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg">Skip for now</button>
+                <button id="submitPinBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-wallet text-white"></i>
+                </div>
+                <h1 class="text-2xl font-bold">Blackout<span class="text-blue-400">Wallet</span></h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 rounded-full bg-gray-700 hover:bg-gray-600">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="relative">
+                    <button id="userMenuBtn" class="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <span>Account</span>
+                    </button>
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-10 hidden">
+                        <div class="py-1">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-700">Settings</a>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-700">Security</a>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-700">Backup Wallet</a>
+                            <div class="border-t border-gray-700"></div>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-700 text-red-400">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-4 mb-6">
+                    <h3 class="font-semibold text-lg mb-4">Navigation</h3>
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg bg-blue-900 bg-opacity-50">
+                                    <i class="fas fa-home w-5"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-exchange-alt w-5"></i>
+                                    <span>Send/Receive</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-chart-line w-5"></i>
+                                    <span>Market Watch</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-image w-5"></i>
+                                    <span>NFT Vault</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-code w-5"></i>
+                                    <span>Developer Tools</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-users w-5"></i>
+                                    <span>Elite Network</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700">
+                                    <i class="fas fa-cog w-5"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-4">
+                    <h3 class="font-semibold text-lg mb-4">Quick Actions</h3>
+                    <div class="space-y-3">
+                        <button id="createWalletBtn" class="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 py-2 px-4 rounded-lg">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Wallet</span>
+                        </button>
+                        <button id="importWalletBtn" class="w-full flex items-center justify-center space-x-2 bg-gray-700 hover:bg-gray-600 py-2 px-4 rounded-lg">
+                            <i class="fas fa-file-import"></i>
+                            <span>Import Wallet</span>
+                        </button>
+                        <button id="connectDappBtn" class="w-full flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-500 py-2 px-4 rounded-lg">
+                            <i class="fas fa-plug"></i>
+                            <span>Connect dApp</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Wallet Overview -->
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Wallet Overview</h2>
+                        <div class="flex space-x-3">
+                            <button class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="wallet-card bg-gray-800 rounded-xl p-4">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Total Balance</p>
+                                    <h3 class="text-2xl font-bold">$24,892.45</h3>
+                                </div>
+                                <div class="bg-blue-900 bg-opacity-50 p-2 rounded-lg">
+                                    <i class="fas fa-wallet text-blue-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">24h Change</span>
+                                <span class="text-green-400">+2.4%</span>
+                            </div>
+                        </div>
+                        <div class="wallet-card bg-gray-800 rounded-xl p-4">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Ethereum</p>
+                                    <h3 class="text-2xl font-bold">12.45 ETH</h3>
+                                </div>
+                                <div class="bg-purple-900 bg-opacity-50 p-2 rounded-lg">
+                                    <i class="fab fa-ethereum text-purple-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">24h Change</span>
+                                <span class="text-green-400">+1.8%</span>
+                            </div>
+                        </div>
+                        <div class="wallet-card bg-gray-800 rounded-xl p-4">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Bitcoin</p>
+                                    <h3 class="text-2xl font-bold">0.42 BTC</h3>
+                                </div>
+                                <div class="bg-orange-900 bg-opacity-50 p-2 rounded-lg">
+                                    <i class="fab fa-bitcoin text-orange-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">24h Change</span>
+                                <span class="text-red-400">-0.7%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold">Recent Transactions</h3>
+                        <button class="text-sm text-blue-400 hover:text-blue-300">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-gray-400 border-b border-gray-700">
+                                    <th class="pb-2">Type</th>
+                                    <th class="pb-2">Amount</th>
+                                    <th class="pb-2">Token</th>
+                                    <th class="pb-2">Status</th>
+                                    <th class="pb-2">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-green-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fas fa-arrow-down text-green-400"></i>
+                                        </div>
+                                        <span>Received</span>
+                                    </td>
+                                    <td>+2.5 ETH</td>
+                                    <td class="flex items-center">
+                                        <i class="fab fa-ethereum text-purple-400 mr-1"></i>
+                                        <span>Ethereum</span>
+                                    </td>
+                                    <td><span class="px-2 py-1 bg-green-900 bg-opacity-30 text-green-400 rounded-full text-xs">Completed</span></td>
+                                    <td>2 mins ago</td>
+                                </tr>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-red-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fas fa-arrow-up text-red-400"></i>
+                                        </div>
+                                        <span>Sent</span>
+                                    </td>
+                                    <td>-0.1 BTC</td>
+                                    <td class="flex items-center">
+                                        <i class="fab fa-bitcoin text-orange-400 mr-1"></i>
+                                        <span>Bitcoin</span>
+                                    </td>
+                                    <td><span class="px-2 py-1 bg-green-900 bg-opacity-30 text-green-400 rounded-full text-xs">Completed</span></td>
+                                    <td>1 hour ago</td>
+                                </tr>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-blue-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fas fa-exchange-alt text-blue-400"></i>
+                                        </div>
+                                        <span>Swap</span>
+                                    </td>
+                                    <td>ETH → USDC</td>
+                                    <td class="flex items-center">
+                                        <i class="fas fa-exchange-alt text-blue-400 mr-1"></i>
+                                        <span>Swap</span>
+                                    </td>
+                                    <td><span class="px-2 py-1 bg-yellow-900 bg-opacity-30 text-yellow-400 rounded-full text-xs">Pending</span></td>
+                                    <td>3 hours ago</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Market Watch -->
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Market Watch</h2>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">All</button>
+                            <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Gainers</button>
+                            <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Losers</button>
+                            <button class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm">Watchlist</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-gray-400 border-b border-gray-700">
+                                    <th class="pb-2">Asset</th>
+                                    <th class="pb-2">Price</th>
+                                    <th class="pb-2">24h Change</th>
+                                    <th class="pb-2">Market Cap</th>
+                                    <th class="pb-2">Volume (24h)</th>
+                                    <th class="pb-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-purple-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fab fa-ethereum text-purple-400"></i>
+                                        </div>
+                                        <span>Ethereum</span>
+                                        <span class="text-gray-500 ml-1">ETH</span>
+                                    </td>
+                                    <td>$1,892.45</td>
+                                    <td><span class="text-green-400">+1.8%</span></td>
+                                    <td>$227.4B</td>
+                                    <td>$12.7B</td>
+                                    <td>
+                                        <button class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm mr-2">Trade</button>
+                                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">+ Watch</button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-orange-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fab fa-bitcoin text-orange-400"></i>
+                                        </div>
+                                        <span>Bitcoin</span>
+                                        <span class="text-gray-500 ml-1">BTC</span>
+                                    </td>
+                                    <td>$29,742.15</td>
+                                    <td><span class="text-red-400">-0.7%</span></td>
+                                    <td>$577.2B</td>
+                                    <td>$18.3B</td>
+                                    <td>
+                                        <button class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm mr-2">Trade</button>
+                                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">+ Watch</button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-gray-700 hover:bg-gray-800">
+                                    <td class="py-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-blue-900 bg-opacity-50 flex items-center justify-center mr-2">
+                                            <i class="fas fa-dollar-sign text-blue-400"></i>
+                                        </div>
+                                        <span>USD Coin</span>
+                                        <span class="text-gray-500 ml-1">USDC</span>
+                                    </td>
+                                    <td>$1.00</td>
+                                    <td><span class="text-gray-400">0.0%</span></td>
+                                    <td>$26.8B</td>
+                                    <td>$3.2B</td>
+                                    <td>
+                                        <button class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm mr-2">Trade</button>
+                                        <button class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">+ Watch</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Elite Features Promo -->
+                <div class="bg-gradient-to-r from-yellow-800 to-yellow-600 rounded-xl p-6">
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="mb-4 md:mb-0">
+                            <h2 class="text-xl font-bold mb-2">Unlock Elite Features</h2>
+                            <p class="text-yellow-100">Upgrade to Elite Pass for advanced trading tools, private vaults, and exclusive networking.</p>
+                        </div>
+                        <button class="px-6 py-3 bg-black bg-opacity-30 hover:bg-opacity-40 rounded-lg font-medium flex items-center">
+                            <i class="fas fa-crown mr-2"></i>
+                            <span>Upgrade for $4.99/month</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NFT Vault -->
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">NFT Vault</h2>
+                        <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>Add NFT</span>
+                        </button>
+                    </div>
+
+                    <div class="nft-grid">
+                        <div class="bg-gray-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <img src="https://via.placeholder.com/300" alt="NFT" class="w-full h-48 object-cover">
+                            <div class="p-3">
+                                <h3 class="font-medium truncate">Bored Ape #1234</h3>
+                                <p class="text-gray-400 text-sm">BAYC</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <img src="https://via.placeholder.com/300" alt="NFT" class="w-full h-48 object-cover">
+                            <div class="p-3">
+                                <h3 class="font-medium truncate">CryptoPunk #5678</h3>
+                                <p class="text-gray-400 text-sm">CryptoPunks</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <img src="https://via.placeholder.com/300" alt="NFT" class="w-full h-48 object-cover">
+                            <div class="p-3">
+                                <h3 class="font-medium truncate">Art Blocks #9012</h3>
+                                <p class="text-gray-400 text-sm">Art Blocks</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                            <div class="w-full h-48 bg-gray-700 flex items-center justify-center">
+                                <i class="fas fa-lock text-gray-500 text-3xl"></i>
+                            </div>
+                            <div class="p-3">
+                                <h3 class="font-medium truncate">Elite Vault</h3>
+                                <p class="text-gray-400 text-sm">Upgrade to view</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blackout Assistant -->
+                <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">Blackout Assistant</h2>
+                        <div class="flex space-x-2">
+                            <button class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-900 rounded-lg p-4 mb-4 h-64 overflow-y-auto">
+                        <div class="chatbot-message bg-gray-800 rounded-lg p-3 mb-3 ml-auto">
+                            <p>Hello! I'm your Blackout Assistant. How can I help you today?</p>
+                            <p class="text-xs text-gray-400 mt-1">Just now</p>
+                        </div>
+                        <div class="chatbot-message bg-blue-900 rounded-lg p-3 mb-3">
+                            <p>I want to send some ETH to my friend</p>
+                            <p class="text-xs text-gray-400 mt-1">Just now</p>
+                        </div>
+                        <div class="chatbot-message bg-gray-800 rounded-lg p-3 mb-3 ml-auto">
+                            <p>Great! Before you send, would you like me to:</p>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li>Verify the recipient address?</li>
+                                <li>Check the gas fees for optimal timing?</li>
+                                <li>Set up a recurring payment?</li>
+                            </ul>
+                            <p class="text-xs text-gray-400 mt-2">Just now</p>
+                        </div>
+                    </div>
+
+                    <div class="flex">
+                        <input type="text" placeholder="Ask me anything..." class="flex-grow bg-gray-700 rounded-l-lg px-4 py-2 outline-none">
+                        <button class="bg-blue-600 hover:bg-blue-500 rounded-r-lg px-4 py-2">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Wallet Modal -->
+    <div id="createWalletModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center mb-6">Create New Wallet</h2>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Wallet Name</label>
+                <input type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="My Wallet">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Security Level</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Basic</button>
+                    <button class="py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Standard</button>
+                    <button class="py-2 elite-gold hover:bg-yellow-600 rounded-lg font-medium">Elite</button>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" class="form-checkbox bg-gray-700 border-gray-600 rounded text-blue-500">
+                    <span class="ml-2 text-gray-300">Enable biometric authentication</span>
+                </label>
+            </div>
+            
+            <div class="bg-gray-900 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold mb-2">Your Recovery Phrase</h3>
+                <div id="mnemonicPhrase" class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">1. abandon</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">2. ability</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">3. zoo</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">4. argue</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">5. bacon</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">6. camera</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">7. dance</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">8. eagle</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">9. fabric</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">10. galaxy</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">11. harbor</div>
+                    <div class="bg-gray-800 rounded px-3 py-2 text-sm">12. image</div>
+                </div>
+                <div class="flex justify-between">
+                    <button id="copyMnemonicBtn" class="text-sm text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                    <button id="generateNewBtn" class="text-sm text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-sync-alt mr-1"></i> Generate New
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="cancelCreateBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Cancel</button>
+                <button id="confirmCreateBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Create Wallet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Wallet Modal -->
+    <div id="importWalletModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center mb-6">Import Wallet</h2>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Import Method</label>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button class="py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Private Key</button>
+                    <button class="py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Recovery Phrase</button>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Recovery Phrase</label>
+                <textarea class="w-full bg-gray-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 h-24" placeholder="Enter your 12 or 24 word recovery phrase"></textarea>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Wallet Name</label>
+                <input type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="My Wallet">
+            </div>
+            
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" class="form-checkbox bg-gray-700 border-gray-600 rounded text-blue-500">
+                    <span class="ml-2 text-gray-300">I have written down my recovery phrase</span>
+                </label>
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="cancelImportBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Cancel</button>
+                <button id="confirmImportBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Import Wallet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connect dApp Modal -->
+    <div id="connectDappModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center mb-6">Connect to dApp</h2>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">dApp URL</label>
+                <input type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Select Wallet</label>
+                <select class="w-full bg-gray-700 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>Main Wallet (0x7f...3a4b)</option>
+                    <option>Trading Wallet (0x9d...7c2e)</option>
+                    <option>NFT Vault (0x5b...1f9d)</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 mb-2">Permissions</label>
+                <div class="bg-gray-900 rounded-lg p-3">
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" class="form-checkbox bg-gray-700 border-gray-600 rounded text-blue-500" checked>
+                        <span class="ml-2 text-gray-300">View wallet balance</span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" class="form-checkbox bg-gray-700 border-gray-600 rounded text-blue-500" checked>
+                        <span class="ml-2 text-gray-300">Request transactions</span>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="form-checkbox bg-gray-700 border-gray-600 rounded text-blue-500">
+                        <span class="ml-2 text-gray-300">Access NFT data</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="cancelConnectBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Cancel</button>
+                <button id="confirmConnectBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elite Pass Modal -->
+    <div id="elitePassModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="elite-gold w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-crown text-black text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Blackout Elite Pass</h2>
+                <p class="text-gray-400 mt-2">Unlock premium features for elite traders</p>
+            </div>
+            
+            <div class="bg-gray-900 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold mb-3 text-center">$4.99/month</h3>
+                
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Private crypto vaults</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Wallet blackout mode (hide from other users)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Elite trader network & messaging</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Advanced trading tools</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Priority customer support</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-400 mt-1 mr-2"></i>
+                        <span>Exclusive theme options</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="flex flex-col space-y-3">
+                <button class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium">
+                    Subscribe with Credit Card
+                </button>
+                <button class="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-medium">
+                    Pay with Crypto
+                </button>
+                <button id="cancelEliteBtn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userMenu = document.getElementById('userMenu');
+        const createWalletBtn = document.getElementById('createWalletBtn');
+        const importWalletBtn = document.getElementById('importWalletBtn');
+        const connectDappBtn = document.getElementById('connectDappBtn');
+        const createWalletModal = document.getElementById('createWalletModal');
+        const importWalletModal = document.getElementById('importWalletModal');
+        const connectDappModal = document.getElementById('connectDappModal');
+        const elitePassModal = document.getElementById('elitePassModal');
+        const cancelCreateBtn = document.getElementById('cancelCreateBtn');
+        const confirmCreateBtn = document.getElementById('confirmCreateBtn');
+        const cancelImportBtn = document.getElementById('cancelImportBtn');
+        const confirmImportBtn = document.getElementById('confirmImportBtn');
+        const cancelConnectBtn = document.getElementById('cancelConnectBtn');
+        const confirmConnectBtn = document.getElementById('confirmConnectBtn');
+        const cancelEliteBtn = document.getElementById('cancelEliteBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+        const copyMnemonicBtn = document.getElementById('copyMnemonicBtn');
+        const pinModal = document.getElementById('pinModal');
+        const pinInput = document.getElementById('pinInput');
+        const pinBackspace = document.getElementById('pinBackspace');
+        const submitPinBtn = document.getElementById('submitPinBtn');
+        const skipPinBtn = document.getElementById('skipPinBtn');
+        const pinBtns = document.querySelectorAll('.pin-btn');
+
+        // Theme Management
+        let currentTheme = 'dark';
+        const themes = {
+            dark: { icon: 'fa-moon', class: 'dark' },
+            light: { icon: 'fa-sun', class: 'light' },
+            elite: { icon: 'fa-crown', class: 'elite' }
+        };
+
+        themeToggle.addEventListener('click', () => {
+            if (currentTheme === 'dark') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                themeToggle.innerHTML = `<i class="fas ${themes.light.icon}"></i>`;
+                currentTheme = 'light';
+            } else if (currentTheme === 'light') {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('elite');
+                themeToggle.innerHTML = `<i class="fas ${themes.elite.icon}"></i>`;
+                currentTheme = 'elite';
+            } else {
+                document.documentElement.classList.remove('elite');
+                document.documentElement.classList.add('dark');
+                themeToggle.innerHTML = `<i class="fas ${themes.dark.icon}"></i>`;
+                currentTheme = 'dark';
+            }
+        });
+
+        // User Menu Toggle
+        userMenuBtn.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Modal Management
+        createWalletBtn.addEventListener('click', () => createWalletModal.classList.remove('hidden'));
+        importWalletBtn.addEventListener('click', () => importWalletModal.classList.remove('hidden'));
+        connectDappBtn.addEventListener('click', () => connectDappModal.classList.remove('hidden'));
+        
+        cancelCreateBtn.addEventListener('click', () => createWalletModal.classList.add('hidden'));
+        confirmCreateBtn.addEventListener('click', () => {
+            createWalletModal.classList.add('hidden');
+            elitePassModal.classList.remove('hidden');
+        });
+        
+        cancelImportBtn.addEventListener('click', () => importWalletModal.classList.add('hidden'));
+        confirmImportBtn.addEventListener('click', () => {
+            importWalletModal.classList.add('hidden');
+            elitePassModal.classList.remove('hidden');
+        });
+        
+        cancelConnectBtn.addEventListener('click', () => connectDappModal.classList.add('hidden'));
+        confirmConnectBtn.addEventListener('click', () => connectDappModal.classList.add('hidden'));
+        
+        cancelEliteBtn.addEventListener('click', () => elitePassModal.classList.add('hidden'));
+
+        // Close modals when clicking outside
+        [createWalletModal, importWalletModal, connectDappModal, elitePassModal, pinModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+        // Generate Mnemonic Phrase
+        generateNewBtn.addEventListener('click', () => {
+            const mnemonic = bip39.generateMnemonic();
+            const words = mnemonic.split(' ');
+            
+            const mnemonicContainer = document.getElementById('mnemonicPhrase');
+            mnemonicContainer.innerHTML = '';
+            
+            words.forEach((word, index) => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'bg-gray-800 rounded px-3 py-2 text-sm';
+                wordElement.textContent = `${index + 1}. ${word}`;
+                mnemonicContainer.appendChild(wordElement);
+            });
+        });
+
+        // Copy Mnemonic to Clipboard
+        copyMnemonicBtn.addEventListener('click', () => {
+            const words = Array.from(document.querySelectorAll('#mnemonicPhrase > div'))
+                .map(div => div.textContent.split('. ')[1])
+                .join(' ');
+            
+            navigator.clipboard.writeText(words).then(() => {
+                copyMnemonicBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied';
+                setTimeout(() => {
+                    copyMnemonicBtn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
+                }, 2000);
+            });
+        });
+
+        // PIN Input Management
+        pinBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (pinInput.value.length < 6) {
+                    pinInput.value += btn.dataset.value;
+                }
+            });
+        });
+
+        pinBackspace.addEventListener('click', () => {
+            pinInput.value = pinInput.value.slice(0, -1);
+        });
+
+        submitPinBtn.addEventListener('click', () => {
+            if (pinInput.value.length === 6) {
+                // In a real app, you would verify the PIN here
+                pinModal.classList.add('hidden');
+                localStorage.setItem('hasPin', 'true');
+            }
+        });
+
+        skipPinBtn.addEventListener('click', () => {
+            pinModal.classList.add('hidden');
+            localStorage.setItem('hasPin', 'false');
+        });
+
+        // Check if PIN is set on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasPin = localStorage.getItem('hasPin');
+            if (hasPin === null) {
+                pinModal.classList.remove('hidden');
+            }
+            
+            // Generate initial mnemonic
+            generateNewBtn.click();
+        });
+
+        // Wallet Connect Simulation
+        let walletConnected = false;
+
+        connectDappBtn.addEventListener('click', () => {
+            if (!walletConnected) {
+                connectDappBtn.innerHTML = '<i class="fas fa-plug"></i><span> Connected</span>';
+                walletConnected = true;
+            } else {
+                connectDappBtn.innerHTML = '<i class="fas fa-plug"></i><span> Connect dApp</span>';
+                walletConnected = false;
+            }
+        });
+
+        // Web3 Integration
+        async function initWeb3() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const web3 = new Web3(window.ethereum);
+                    
+                    // Get accounts
+                    const accounts = await web3.eth.getAccounts();
+                    console.log('Connected account:', accounts[0]);
+                    
+                    // Get balance
+                    const balance = await web3.eth.getBalance(accounts[0]);
+                    console.log('Balance:', web3.utils.fromWei(balance, 'ether'), 'ETH');
+                    
+                    return web3;
+                } catch (error) {
+                    console.error('User denied account access');
+                }
+            } else {
+                console.log('Non-Ethereum browser detected. Consider installing MetaMask!');
+            }
+        }
+
+        // Initialize web3 on button click (simulated here)
+        document.getElementById('connectDappBtn').addEventListener('click', () => {
+            initWeb3().then(web3 => {
+                if (web3) {
+                    console.log('Web3 initialized successfully');
+                }
+            });
+        });
+
+        // BIP39 Wallet Generation
+        function generateWalletFromMnemonic(mnemonic) {
+            const seed = bip39.mnemonicToSeedSync(mnemonic);
+            const hdWallet = hdkey.fromMasterSeed(seed);
+            const wallet = hdWallet.derivePath("m/44'/60'/0'/0/0").getWallet();
+            
+            return {
+                address: '0x' + wallet.getAddress().toString('hex'),
+                privateKey: wallet.getPrivateKey().toString('hex'),
+                mnemonic: mnemonic
+            };
+        }
+
+        // Example usage:
+        // const wallet = generateWalletFromMnemonic('your mnemonic phrase here');
+        // console.log(wallet);
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Karmastudios/blackout-wallet-crypto-wallet-elite" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
