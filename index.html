@@ -1,49 +1,34 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackout Wallet | Elite Crypto Wallet</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <header class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900">
-        <h1 class="text-xl font-bold">Blackout Wallet</h1>
-        <button id="connect-btn" class="bg-yellow-500 text-black px-4 py-2 rounded">Connect Wallet</button>
-    </header>
+<body class="gradient-bg text-white min-h-screen font-mono">
 
-    <main class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Wallet Info Card -->
-        <div class="wallet-card p-4 bg-gray-800 rounded-lg shadow-lg">
-            <h2 class="text-lg font-bold mb-2">Account</h2>
-            <p id="wallet-address">Not connected</p>
-            <p id="wallet-balance">Balance: 0 ETH</p>
+<header class="p-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-neon-green">Blackout Wallet | Elite</h1>
+    <button id="theme-toggle" class="px-4 py-2 border border-neon-blue rounded hover:shadow-neon transition">
+        Toggle Theme
+    </button>
+</header>
+
+<main class="p-8 flex flex-col gap-6">
+    <!-- Wallet Card -->
+    <div class="wallet-card p-6">
+        <h2 class="wallet-balance text-2xl mb-4">Balance: 0 ETH</h2>
+        <div class="flex gap-4">
+            <button id="connect-wallet-main" class="wallet-btn">Connect Wallet</button>
+            <button id="send-eth-main" class="wallet-btn">Send ETH</button>
         </div>
+    </div>
 
-        <!-- NFT Viewer -->
-        <div class="wallet-card p-4 bg-gray-800 rounded-lg shadow-lg">
-            <h2 class="text-lg font-bold mb-2">Your NFTs</h2>
-            <div id="nft-container" class="nft-grid"></div>
+    <!-- NFTs / Tokens Grid -->
+    <div class="nft-grid">
+        <div class="nft-card">
+            <img src="https://via.placeholder.com/150" alt="NFT" class="rounded">
+            <h3 class="mt-2 text-neon-purple font-bold">NFT #1</h3>
         </div>
-
-        <!-- Token Swap -->
-        <div class="wallet-card p-4 bg-gray-800 rounded-lg shadow-lg">
-            <h2 class="text-lg font-bold mb-2">Token Swap (Simulated)</h2>
-            <div class="flex gap-2 mb-2">
-                <input id="swap-amount" type="number" placeholder="Amount" class="w-1/2 p-2 rounded text-black">
-                <select id="swap-from" class="w-1/4 p-2 rounded text-black">
-                    <option>ETH</option><option>USDT</option><option>DAI</option><option>WETH</option>
-                </select>
-                <select id="swap-to" class="w-1/4 p-2 rounded text-black">
-                    <option>ETH</option><option>USDT</option><option>DAI</option><option>WETH</option>
-                </select>
-            </div>
-            <button id="swap-btn" class="wallet-btn w-full bg-yellow-500 text-black py-2 rounded">Swap</button>
+        <div class="nft-card">
+            <img src="https://via.placeholder.com/150" alt="NFT" class="rounded">
+            <h3 class="mt-2 text-neon-purple font-bold">NFT #2</h3>
         </div>
-    </main>
+    </div>
+</main>
 
-    <script src="viewer.js"></script>
-</body>
-</html>
+<!-- JS -->
+<script src="viewer.js"></script>
