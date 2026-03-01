@@ -1,50 +1,59 @@
-// viewer.js
+// ====== Wallet Connection ======
+let provider;
+let signer;
+let userAddress;
 
-// Elements
-const connectBtn = document.getElementById("connect-wallet");
-const sendBtn = document.getElementById("send-eth");
-const balanceEl = document.querySelector(".wallet-balance");
-
-// Global state
-let userAddress = null;
-let provider = null;
-
-// Connect Wallet
-async function connectWallet() {
-    if (window.ethereum) {
-        try {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            userAddress = await signer.getAddress();
-            const balance = await provider.getBalance(userAddress);
-            const ethBalance = ethers.utils.formatEther(balance);
-            balanceEl.textContent = `Balance: ${ethBalance} ETH`;
-            connectBtn.textContent = `Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-            connectBtn.disabled = true;
-            sendBtn.disabled = false;
-        } catch (err) {
-            console.error(err);
-            alert("Wallet connection failed.");
-        }
+const connectBtn = document.getElementById("connect-btn");
+connectBtn.onclick = async () => {
+    if(window.ethereum){
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        connectBtn.innerText = "Connected";
+        document.getElementById("wallet-address").innerText = userAddress;
+        loadBalance();
+        loadNFTs();
     } else {
-        alert("MetaMask or another Ethereum wallet is required.");
+        alert("Install MetaMask!");
     }
 }
 
-// Mock Send ETH
-function sendETH() {
-    if (!userAddress) {
-        alert("Connect wallet first!");
-        return;
-    }
-    // Mock transaction (for demo only)
-    alert(`Pretending to send ETH from ${userAddress}`);
+async function loadBalance(){
+    if(!provider || !userAddress) return;
+    const balance = await provider.getBalance(userAddress);
+    document.getElementById("wallet-balance").innerText = "Balance: " + ethers.utils.formatEther(balance) + " ETH";
 }
 
-// Event listeners
-connectBtn.addEventListener("click", connectWallet);
-sendBtn.addEventListener("click", sendETH);
+// ====== NFT Viewer ======
+const nftContainerSelector = "#nft-container";
+const nftContractAddress = "0xYourNFTContractAddress";
+const nftABI = [
+    "function balanceOf(address owner) view returns (uint256)",
+    "function tokenOfOwnerByIndex(address owner, uint index) view returns (uint256)"
+];
+let nftContract = null;
 
-// Initialize
-sendBtn.disabled = true; // Disabled until wallet connects
+async function loadNFTs(){
+    const container = document.querySelector(nftContainerSelector);
+    if(!container || !userAddress) return;
+    container.innerHTML = "";
+    nftContract = new ethers.Contract(nftContractAddress, nftABI, provider);
+    const balance = await nftContract.balanceOf(userAddress);
+    for(let i=0;i<balance;i++){
+        const tokenId = await nftContract.tokenOfOwnerByIndex(userAddress, i);
+        const card = document.createElement("div");
+        card.className = "nft-card";
+        card.innerHTML = `<img src="assets/placeholder-nft.png" alt="NFT #${tokenId}"><h3>#${tokenId}</h3>`;
+        container.appendChild(card);
+    }
+}
+
+// ====== Token Swap Simulation ======
+document.getElementById("swap-btn").onclick = () => {
+    const amount = parseFloat(document.getElementById("swap-amount").value);
+    const from = document.getElementById("swap-from").value;
+    const to = document.getElementById("swap-to").value;
+    if(!amount || from === to) return alert("Invalid swap");
+    alert(`Swapped ${amount} ${from} → ${to} (simulated)`);
+};
