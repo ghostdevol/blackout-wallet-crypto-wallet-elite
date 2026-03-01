@@ -1,94 +1,27 @@
-/* Base Gradient Background */
-.gradient-bg {
-    background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%);
+body {
+    font-family: 'Inter', sans-serif;
 }
-
-/* Neon Colors */
-.text-neon-green { color: #00ff99; }
-.text-neon-blue { color: #00cfff; }
-.text-neon-purple { color: #d200ff; }
-.border-neon-green { border-color: #00ff99; }
-.border-neon-blue { border-color: #00cfff; }
-
-/* Wallet Card */
 .wallet-card {
-    background: #111;
-    border: 2px solid #00ff99;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 0 15px #00ff99, 0 0 25px #00cfff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
 }
 .wallet-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 0 25px #00ff99, 0 0 40px #00cfff;
+    box-shadow: 0 20px 25px rgba(0,0,0,0.2);
 }
-
-/* Buttons */
-.wallet-btn {
-    background: #111;
-    color: #00ff99;
-    border: 1px solid #00ff99;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-.wallet-btn:hover {
-    box-shadow: 0 0 10px #00ff99, 0 0 20px #00cfff;
-    transform: scale(1.05);
-}
-
-/* NFT Grid */
 .nft-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+    gap: 0.5rem;
 }
 .nft-card {
     background: #111;
-    border: 1px solid #d200ff;
-    border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: 0 0 10px #d200ff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+    cursor: pointer;
 }
-.nft-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 20px #d200ff, 0 0 30px #00cfff;
-}
-
-/* Headers & Text Glow */
-h1, h2, h3, .wallet-balance {
-    text-shadow: 0 0 5px #00ff99, 0 0 10px #00cfff;
-}
-
-/* Responsive NFT Grid */
-@media (max-width: 768px) {
-    .nft-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-}
-
-/* Scrollbar for token selectors */
-.token-selector::-webkit-scrollbar {
-    width: 6px;
-}
-.token-selector::-webkit-scrollbar-track {
-    background: #111;
-}
-.token-selector::-webkit-scrollbar-thumb {
-    background: #4a5568;
-    border-radius: 3px;
-}
-
-/* Optional Neon Shadow Class */
-.shadow-neon {
-    box-shadow: 0 0 20px #00ff99, 0 0 40px #00cfff;
-}
-
-/* Theme Switch Placeholder */
-body.dark {
-    color: #fff;
-    background-color: #0a0a0a;
+.nft-card img {
+    width: 100%;
+    height: auto;
 }
